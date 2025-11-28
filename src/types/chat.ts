@@ -134,6 +134,14 @@ export interface DailyActivity {
 }
 
 /**
+ * 星期活跃度统计
+ */
+export interface WeekdayActivity {
+  weekday: number // 1-7，1=周一，7=周日
+  messageCount: number
+}
+
+/**
  * 分析会话信息（用于会话列表展示）
  */
 export interface AnalysisSession {

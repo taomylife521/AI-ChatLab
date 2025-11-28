@@ -44,7 +44,7 @@ const showViewAll = computed(() => {
       </div>
 
       <!-- 完整排行榜 Dialog -->
-      <UModal v-model:open="isOpen" :ui="{ width: 'max-w-3xl' }">
+      <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
         <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" color="gray" variant="ghost">查看完整排行</UButton>
         <template #header>
           <div class="flex items-center justify-between">

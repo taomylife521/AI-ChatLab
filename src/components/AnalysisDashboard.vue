@@ -6,6 +6,7 @@ import type { AnalysisSession, MemberActivity, HourlyActivity, DailyActivity, Me
 import UITabs from '@/components/UI/Tabs.vue'
 import OverviewTab from './analysis/OverviewTab.vue'
 import MembersTab from './analysis/MembersTab.vue'
+import TimeTab from './analysis/TimeTab.vue'
 import TimelineTab from './analysis/TimelineTab.vue'
 
 const chatStore = useChatStore()
@@ -28,7 +29,8 @@ const selectedYear = ref<number>(0) // 0 表示全部
 const tabs = [
   { id: 'overview', label: '总览', icon: 'i-heroicons-chart-pie' },
   { id: 'members', label: '成员', icon: 'i-heroicons-user-group' },
-  { id: 'timeline', label: '时间', icon: 'i-heroicons-chart-bar' },
+  { id: 'time', label: '规律', icon: 'i-heroicons-clock' },
+  { id: 'timeline', label: '趋势', icon: 'i-heroicons-chart-bar' },
 ]
 
 const activeTab = ref('overview')
@@ -241,12 +243,13 @@ onMounted(loadData)
             :member-activity="memberActivity"
             :time-filter="timeFilter"
           />
-          <TimelineTab
-            v-else-if="activeTab === 'timeline'"
-            :daily-activity="dailyActivity"
+          <TimeTab
+            v-else-if="activeTab === 'time'"
+            :session-id="currentSessionId!"
             :hourly-activity="hourlyActivity"
-            :time-range="timeRange"
+            :time-filter="timeFilter"
           />
+          <TimelineTab v-else-if="activeTab === 'timeline'" :daily-activity="dailyActivity" :time-range="timeRange" />
         </Transition>
       </div>
     </template>

@@ -316,6 +316,21 @@ const mainIpcMain = (win: BrowserWindow) => {
   )
 
   /**
+   * 获取星期活跃度分布
+   */
+  ipcMain.handle(
+    'chat:getWeekdayActivity',
+    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number }) => {
+      try {
+        return database.getWeekdayActivity(sessionId, filter)
+      } catch (error) {
+        console.error('获取星期活跃度失败：', error)
+        return []
+      }
+    }
+  )
+
+  /**
    * 获取消息类型分布
    */
   ipcMain.handle(

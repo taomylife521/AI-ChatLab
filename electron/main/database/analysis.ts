@@ -7,6 +7,7 @@ import type {
   MemberActivity,
   HourlyActivity,
   DailyActivity,
+  WeekdayActivity,
   MessageType,
   RepeatAnalysis,
   RepeatStatItem,
@@ -515,6 +516,54 @@ export function getRepeatAnalysis(sessionId: string, filter?: TimeFilter): Repea
       avgChainLength: totalRepeatChains > 0 ? Math.round((totalChainLength / totalRepeatChains) * 100) / 100 : 0,
       totalRepeatChains,
     }
+  } finally {
+    db.close()
+  }
+}
+
+/**
+ * 获取星期活跃度分布
+ * 返回周一到周日的消息统计
+ */
+export function getWeekdayActivity(sessionId: string, filter?: TimeFilter): WeekdayActivity[] {
+  const db = openDatabase(sessionId)
+  if (!db) return []
+
+  try {
+    const { clause, params } = buildTimeFilter(filter)
+    const clauseWithSystem = buildSystemMessageFilter(clause)
+
+    // SQLite strftime('%w') 返回 0-6，0=周日
+    // 我们需要转换为 1-7，1=周一，7=周日
+    const rows = db
+      .prepare(
+        `
+      SELECT
+        CASE
+          WHEN CAST(strftime('%w', msg.ts, 'unixepoch', 'localtime') AS INTEGER) = 0 THEN 7
+          ELSE CAST(strftime('%w', msg.ts, 'unixepoch', 'localtime') AS INTEGER)
+        END as weekday,
+        COUNT(*) as messageCount
+      FROM message msg
+      JOIN member m ON msg.sender_id = m.id
+      ${clauseWithSystem}
+      GROUP BY weekday
+      ORDER BY weekday
+    `
+      )
+      .all(...params) as Array<{ weekday: number; messageCount: number }>
+
+    // 补全所有星期（1-7）
+    const result: WeekdayActivity[] = []
+    for (let w = 1; w <= 7; w++) {
+      const found = rows.find((r) => r.weekday === w)
+      result.push({
+        weekday: w,
+        messageCount: found ? found.messageCount : 0,
+      })
+    }
+
+    return result
   } finally {
     db.close()
   }

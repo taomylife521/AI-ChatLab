@@ -6,6 +6,7 @@ import type {
   MemberNameHistory,
   HourlyActivity,
   DailyActivity,
+  WeekdayActivity,
   MessageType,
   ImportProgress,
   RepeatAnalysis,
@@ -109,6 +110,13 @@ const chatApi = {
    */
   getDailyActivity: (sessionId: string, filter?: { startTs?: number; endTs?: number }): Promise<DailyActivity[]> => {
     return ipcRenderer.invoke('chat:getDailyActivity', sessionId, filter)
+  },
+
+  /**
+   * 获取星期活跃度分布
+   */
+  getWeekdayActivity: (sessionId: string, filter?: { startTs?: number; endTs?: number }): Promise<WeekdayActivity[]> => {
+    return ipcRenderer.invoke('chat:getWeekdayActivity', sessionId, filter)
   },
 
   /**

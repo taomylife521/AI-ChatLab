@@ -5,6 +5,7 @@ import type {
   MemberNameHistory,
   HourlyActivity,
   DailyActivity,
+  WeekdayActivity,
   MessageType,
   ImportProgress,
   RepeatAnalysis,
@@ -27,6 +28,7 @@ interface ChatApi {
   getMemberNameHistory: (sessionId: string, memberId: number) => Promise<MemberNameHistory[]>
   getHourlyActivity: (sessionId: string, filter?: TimeFilter) => Promise<HourlyActivity[]>
   getDailyActivity: (sessionId: string, filter?: TimeFilter) => Promise<DailyActivity[]>
+  getWeekdayActivity: (sessionId: string, filter?: TimeFilter) => Promise<WeekdayActivity[]>
   getMessageTypeDistribution: (
     sessionId: string,
     filter?: TimeFilter

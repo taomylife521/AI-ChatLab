@@ -46,7 +46,7 @@ const formattedCount = computed(() => props.countTemplate.replace('{count}', Str
         <slot name="headerRight" />
 
         <!-- 完整列表弹窗 -->
-        <UModal v-model:open="isOpen" :ui="{ width: 'max-w-3xl' }">
+        <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-4xl' }">
           <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" color="gray" variant="ghost">查看完整列表</UButton>
           <template #header>
             <div class="flex items-center justify-between">
