@@ -36,4 +36,9 @@ export {
   // 流式导入 API
   streamImport,
   streamParseFileInfo,
+  // AI 查询 API
+  searchMessages,
+  getMessageContext,
 } from './workerManager'
+
+export type { SearchMessageResult } from './workerManager'

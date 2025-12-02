@@ -33,6 +33,8 @@ import {
   getLaughAnalysis,
   getMemeBattleAnalysis,
   getCheckInAnalysis,
+  searchMessages,
+  getMessageContext,
 } from './query'
 import { parseFile, detectFormat } from '../parser'
 import { streamImport, streamParseFileInfo } from './import'
@@ -109,6 +111,10 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   getLaughAnalysis: (p) => getLaughAnalysis(p.sessionId, p.filter, p.keywords),
   getMemeBattleAnalysis: (p) => getMemeBattleAnalysis(p.sessionId, p.filter),
   getCheckInAnalysis: (p) => getCheckInAnalysis(p.sessionId, p.filter),
+
+  // AI 查询
+  searchMessages: (p) => searchMessages(p.sessionId, p.keywords, p.filter, p.limit, p.offset),
+  getMessageContext: (p) => getMessageContext(p.sessionId, p.messageId, p.contextSize),
 }
 
 // 异步消息处理器（流式操作）

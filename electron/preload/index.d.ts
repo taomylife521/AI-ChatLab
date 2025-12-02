@@ -81,13 +81,121 @@ interface MergeApi {
   onParseProgress: (callback: (data: { filePath: string; progress: ImportProgress }) => void) => () => void
 }
 
+// AI 相关类型
+interface SearchMessageResult {
+  id: number
+  senderName: string
+  senderPlatformId: string
+  content: string
+  timestamp: number
+  type: number
+}
+
+interface AIConversation {
+  id: string
+  sessionId: string
+  title: string | null
+  createdAt: number
+  updatedAt: number
+}
+
+interface AIMessage {
+  id: string
+  conversationId: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  dataKeywords?: string[]
+  dataMessageCount?: number
+}
+
+interface AiApi {
+  searchMessages: (
+    sessionId: string,
+    keywords: string[],
+    filter?: TimeFilter,
+    limit?: number,
+    offset?: number
+  ) => Promise<{ messages: SearchMessageResult[]; total: number }>
+  getMessageContext: (sessionId: string, messageId: number, contextSize?: number) => Promise<SearchMessageResult[]>
+  createConversation: (sessionId: string, title?: string) => Promise<AIConversation>
+  getConversations: (sessionId: string) => Promise<AIConversation[]>
+  getConversation: (conversationId: string) => Promise<AIConversation | null>
+  updateConversationTitle: (conversationId: string, title: string) => Promise<boolean>
+  deleteConversation: (conversationId: string) => Promise<boolean>
+  addMessage: (
+    conversationId: string,
+    role: 'user' | 'assistant',
+    content: string,
+    dataKeywords?: string[],
+    dataMessageCount?: number
+  ) => Promise<AIMessage>
+  getMessages: (conversationId: string) => Promise<AIMessage[]>
+  deleteMessage: (messageId: string) => Promise<boolean>
+}
+
+// LLM 相关类型
+interface LLMProviderInfo {
+  id: string
+  name: string
+  description: string
+  defaultBaseUrl: string
+  models: Array<{ id: string; name: string; description?: string }>
+}
+
+interface LLMConfig {
+  provider: string
+  apiKey: string
+  apiKeySet: boolean
+  model?: string
+  maxTokens?: number
+}
+
+interface LLMChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+interface LLMChatOptions {
+  temperature?: number
+  maxTokens?: number
+}
+
+interface LLMChatStreamChunk {
+  content: string
+  isFinished: boolean
+  finishReason?: 'stop' | 'length' | 'error'
+}
+
+interface LlmApi {
+  getProviders: () => Promise<LLMProviderInfo[]>
+  getConfig: () => Promise<LLMConfig | null>
+  saveConfig: (config: {
+    provider: string
+    apiKey: string
+    model?: string
+    maxTokens?: number
+  }) => Promise<{ success: boolean; error?: string }>
+  deleteConfig: () => Promise<boolean>
+  validateApiKey: (provider: string, apiKey: string) => Promise<boolean>
+  hasConfig: () => Promise<boolean>
+  chat: (messages: LLMChatMessage[], options?: LLMChatOptions) => Promise<{ success: boolean; content?: string; error?: string }>
+  chatStream: (
+    messages: LLMChatMessage[],
+    options?: LLMChatOptions,
+    onChunk?: (chunk: LLMChatStreamChunk) => void
+  ) => Promise<{ success: boolean; error?: string }>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
     api: Api
     chatApi: ChatApi
     mergeApi: MergeApi
+    aiApi: AiApi
+    llmApi: LlmApi
   }
 }
 
-export { ChatApi, Api, MergeApi }
+export { ChatApi, Api, MergeApi, AiApi, LlmApi, SearchMessageResult, AIConversation, AIMessage, LLMProviderInfo, LLMConfig, LLMChatMessage, LLMChatOptions, LLMChatStreamChunk }

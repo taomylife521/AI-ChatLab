@@ -350,3 +350,38 @@ export async function streamImport(
 export function getDbDirectory(): string {
   return getDbDir()
 }
+
+// ==================== AI 查询 API ====================
+
+export interface SearchMessageResult {
+  id: number
+  senderName: string
+  senderPlatformId: string
+  content: string
+  timestamp: number
+  type: number
+}
+
+/**
+ * 关键词搜索消息
+ */
+export async function searchMessages(
+  sessionId: string,
+  keywords: string[],
+  filter?: any,
+  limit?: number,
+  offset?: number
+): Promise<{ messages: SearchMessageResult[]; total: number }> {
+  return sendToWorker('searchMessages', { sessionId, keywords, filter, limit, offset })
+}
+
+/**
+ * 获取消息上下文
+ */
+export async function getMessageContext(
+  sessionId: string,
+  messageId: number,
+  contextSize?: number
+): Promise<SearchMessageResult[]> {
+  return sendToWorker('getMessageContext', { sessionId, messageId, contextSize })
+}

@@ -23,8 +23,10 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
+    "@types/markdown-it": "^14.1.2",
     "better-sqlite3": "^12.4.6",
     "electron-updater": "^6.6.2",
+    "markdown-it": "^14.1.0",
     "stream-json": "^1.9.1"
   },
   "devDependencies": {

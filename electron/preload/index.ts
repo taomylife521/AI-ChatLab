@@ -42,7 +42,7 @@ const api = {
     }
   },
   receive: (channel: string, func: (...args: unknown[]) => void) => {
-    const validChannels = ['show-message', 'chat:importProgress', 'merge:parseProgress']
+    const validChannels = ['show-message', 'chat:importProgress', 'merge:parseProgress', 'llm:streamChunk']
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
       ipcRenderer.on(channel, (_event, ...args) => func(...args))
@@ -332,6 +332,265 @@ const mergeApi = {
   },
 }
 
+// AI API - AI 功能
+interface SearchMessageResult {
+  id: number
+  senderName: string
+  senderPlatformId: string
+  content: string
+  timestamp: number
+  type: number
+}
+
+interface AIConversation {
+  id: string
+  sessionId: string
+  title: string | null
+  createdAt: number
+  updatedAt: number
+}
+
+interface AIMessage {
+  id: string
+  conversationId: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  dataKeywords?: string[]
+  dataMessageCount?: number
+}
+
+const aiApi = {
+  /**
+   * 搜索消息（关键词搜索）
+   */
+  searchMessages: (
+    sessionId: string,
+    keywords: string[],
+    filter?: { startTs?: number; endTs?: number },
+    limit?: number,
+    offset?: number
+  ): Promise<{ messages: SearchMessageResult[]; total: number }> => {
+    return ipcRenderer.invoke('ai:searchMessages', sessionId, keywords, filter, limit, offset)
+  },
+
+  /**
+   * 获取消息上下文
+   */
+  getMessageContext: (sessionId: string, messageId: number, contextSize?: number): Promise<SearchMessageResult[]> => {
+    return ipcRenderer.invoke('ai:getMessageContext', sessionId, messageId, contextSize)
+  },
+
+  /**
+   * 创建 AI 对话
+   */
+  createConversation: (sessionId: string, title?: string): Promise<AIConversation> => {
+    return ipcRenderer.invoke('ai:createConversation', sessionId, title)
+  },
+
+  /**
+   * 获取会话的所有 AI 对话列表
+   */
+  getConversations: (sessionId: string): Promise<AIConversation[]> => {
+    return ipcRenderer.invoke('ai:getConversations', sessionId)
+  },
+
+  /**
+   * 获取单个 AI 对话
+   */
+  getConversation: (conversationId: string): Promise<AIConversation | null> => {
+    return ipcRenderer.invoke('ai:getConversation', conversationId)
+  },
+
+  /**
+   * 更新 AI 对话标题
+   */
+  updateConversationTitle: (conversationId: string, title: string): Promise<boolean> => {
+    return ipcRenderer.invoke('ai:updateConversationTitle', conversationId, title)
+  },
+
+  /**
+   * 删除 AI 对话
+   */
+  deleteConversation: (conversationId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('ai:deleteConversation', conversationId)
+  },
+
+  /**
+   * 添加 AI 消息
+   */
+  addMessage: (
+    conversationId: string,
+    role: 'user' | 'assistant',
+    content: string,
+    dataKeywords?: string[],
+    dataMessageCount?: number
+  ): Promise<AIMessage> => {
+    return ipcRenderer.invoke('ai:addMessage', conversationId, role, content, dataKeywords, dataMessageCount)
+  },
+
+  /**
+   * 获取 AI 对话的所有消息
+   */
+  getMessages: (conversationId: string): Promise<AIMessage[]> => {
+    return ipcRenderer.invoke('ai:getMessages', conversationId)
+  },
+
+  /**
+   * 删除 AI 消息
+   */
+  deleteMessage: (messageId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('ai:deleteMessage', messageId)
+  },
+}
+
+// LLM API - LLM 服务功能
+interface LLMProvider {
+  id: string
+  name: string
+  description: string
+  defaultBaseUrl: string
+  models: Array<{ id: string; name: string; description?: string }>
+}
+
+interface LLMConfig {
+  provider: string
+  apiKey: string
+  apiKeySet: boolean
+  model?: string
+  maxTokens?: number
+}
+
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+interface ChatOptions {
+  temperature?: number
+  maxTokens?: number
+}
+
+interface ChatStreamChunk {
+  content: string
+  isFinished: boolean
+  finishReason?: 'stop' | 'length' | 'error'
+}
+
+const llmApi = {
+  /**
+   * 获取所有支持的 LLM 提供商
+   */
+  getProviders: (): Promise<LLMProvider[]> => {
+    return ipcRenderer.invoke('llm:getProviders')
+  },
+
+  /**
+   * 获取当前 LLM 配置
+   */
+  getConfig: (): Promise<LLMConfig | null> => {
+    return ipcRenderer.invoke('llm:getConfig')
+  },
+
+  /**
+   * 保存 LLM 配置
+   */
+  saveConfig: (config: {
+    provider: string
+    apiKey: string
+    model?: string
+    maxTokens?: number
+  }): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('llm:saveConfig', config)
+  },
+
+  /**
+   * 删除 LLM 配置
+   */
+  deleteConfig: (): Promise<boolean> => {
+    return ipcRenderer.invoke('llm:deleteConfig')
+  },
+
+  /**
+   * 验证 API Key
+   */
+  validateApiKey: (provider: string, apiKey: string): Promise<boolean> => {
+    return ipcRenderer.invoke('llm:validateApiKey', provider, apiKey)
+  },
+
+  /**
+   * 检查是否已配置 LLM
+   */
+  hasConfig: (): Promise<boolean> => {
+    return ipcRenderer.invoke('llm:hasConfig')
+  },
+
+  /**
+   * 发送 LLM 聊天请求（非流式）
+   */
+  chat: (messages: ChatMessage[], options?: ChatOptions): Promise<{ success: boolean; content?: string; error?: string }> => {
+    return ipcRenderer.invoke('llm:chat', messages, options)
+  },
+
+  /**
+   * 发送 LLM 聊天请求（流式）
+   * 返回一个 Promise，该 Promise 在流完成后才 resolve
+   */
+  chatStream: (
+    messages: ChatMessage[],
+    options?: ChatOptions,
+    onChunk?: (chunk: ChatStreamChunk) => void
+  ): Promise<{ success: boolean; error?: string }> => {
+    return new Promise((resolve) => {
+      const requestId = `llm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      console.log('[preload] chatStream 开始，requestId:', requestId)
+
+      const handler = (
+        _event: Electron.IpcRendererEvent,
+        data: { requestId: string; chunk: ChatStreamChunk; error?: string }
+      ) => {
+        if (data.requestId === requestId) {
+          if (data.error) {
+            console.log('[preload] chatStream 收到错误:', data.error)
+            if (onChunk) {
+              onChunk({ content: '', isFinished: true, finishReason: 'error' })
+            }
+            ipcRenderer.removeListener('llm:streamChunk', handler)
+            resolve({ success: false, error: data.error })
+          } else {
+            if (onChunk) {
+              onChunk(data.chunk)
+            }
+
+            // 如果已完成，移除监听器并 resolve
+            if (data.chunk.isFinished) {
+              console.log('[preload] chatStream 完成，requestId:', requestId)
+              ipcRenderer.removeListener('llm:streamChunk', handler)
+              resolve({ success: true })
+            }
+          }
+        }
+      }
+
+      ipcRenderer.on('llm:streamChunk', handler)
+
+      // 发起请求
+      ipcRenderer.invoke('llm:chatStream', requestId, messages, options).then((result) => {
+        console.log('[preload] chatStream invoke 返回:', result)
+        if (!result.success) {
+          ipcRenderer.removeListener('llm:streamChunk', handler)
+          resolve(result)
+        }
+        // 如果 success，等待流完成（由 handler 处理 resolve）
+      }).catch((error) => {
+        console.error('[preload] chatStream invoke 错误:', error)
+        ipcRenderer.removeListener('llm:streamChunk', handler)
+        resolve({ success: false, error: String(error) })
+      })
+    })
+  },
+}
+
 // 扩展 api，添加 dialog 功能
 const extendedApi = {
   ...api,
@@ -351,6 +610,8 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('api', extendedApi)
     contextBridge.exposeInMainWorld('chatApi', chatApi)
     contextBridge.exposeInMainWorld('mergeApi', mergeApi)
+    contextBridge.exposeInMainWorld('aiApi', aiApi)
+    contextBridge.exposeInMainWorld('llmApi', llmApi)
   } catch (error) {
     console.error(error)
   }
@@ -363,4 +624,8 @@ if (process.contextIsolated) {
   window.chatApi = chatApi
   // @ts-ignore (define in dts)
   window.mergeApi = mergeApi
+  // @ts-ignore (define in dts)
+  window.aiApi = aiApi
+  // @ts-ignore (define in dts)
+  window.llmApi = llmApi
 }

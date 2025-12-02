@@ -11,6 +11,7 @@ import RankingTab from '@/components/analysis/RankingTab.vue'
 import TimelineTab from '@/components/analysis/TimelineTab.vue'
 import QuotesTab from '@/components/analysis/QuotesTab.vue'
 import RelationshipsTab from '@/components/analysis/RelationshipsTab.vue'
+import AITab from '@/components/analysis/AITab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,6 +39,7 @@ const tabs = [
   { id: 'quotes', label: '群语录', icon: 'i-heroicons-chat-bubble-bottom-center-text' },
   { id: 'relationships', label: '群关系', icon: 'i-heroicons-heart' },
   { id: 'timeline', label: '群趋势', icon: 'i-heroicons-chart-bar' },
+  { id: 'ai', label: 'AI', icon: 'i-heroicons-sparkles' },
 ]
 
 const activeTab = ref((route.query.tab as string) || 'overview')
@@ -345,6 +347,13 @@ onMounted(() => {
               :daily-activity="dailyActivity"
               :member-activity="memberActivity"
               :time-range="timeRange"
+              :time-filter="timeFilter"
+            />
+            <AITab
+              v-else-if="activeTab === 'ai'"
+              :key="'ai-' + selectedYear"
+              :session-id="currentSessionId!"
+              :session-name="session.name"
               :time-filter="timeFilter"
             />
           </Transition>

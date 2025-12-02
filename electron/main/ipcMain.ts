@@ -13,6 +13,12 @@ import { detectFormat, type ParseProgress } from './parser'
 // 导入合并模块
 import * as merger from './merger'
 import { deleteTempDatabase, cleanupAllTempDatabases } from './merger/tempCache'
+// 导入 AI 对话管理模块
+import * as aiConversations from './ai/conversations'
+// 导入 LLM 服务模块
+import * as llm from './ai/llm'
+// 导入 AI 日志模块
+import { aiLogger } from './ai/logger'
 import type { MergeParams } from '../../src/types/chat'
 
 console.log('[IpcMain] Database, Worker and Parser modules imported')
@@ -716,6 +722,288 @@ const mainIpcMain = (win: BrowserWindow) => {
     } catch (error) {
       console.error('显示对话框失败：', error)
       throw error
+    }
+  })
+
+  // ==================== AI 功能 ====================
+
+  /**
+   * 搜索消息（关键词搜索）
+   */
+  ipcMain.handle(
+    'ai:searchMessages',
+    async (_, sessionId: string, keywords: string[], filter?: { startTs?: number; endTs?: number }, limit?: number, offset?: number) => {
+      aiLogger.info('IPC', '收到搜索消息请求', {
+        sessionId,
+        keywords,
+        filter,
+        limit,
+        offset,
+      })
+      try {
+        const result = await worker.searchMessages(sessionId, keywords, filter, limit, offset)
+        aiLogger.info('IPC', '搜索消息完成', {
+          total: result.total,
+          returned: result.messages.length,
+        })
+        return result
+      } catch (error) {
+        aiLogger.error('IPC', '搜索消息失败', { error: String(error) })
+        console.error('搜索消息失败：', error)
+        return { messages: [], total: 0 }
+      }
+    }
+  )
+
+  /**
+   * 获取消息上下文
+   */
+  ipcMain.handle('ai:getMessageContext', async (_, sessionId: string, messageId: number, contextSize?: number) => {
+    try {
+      return await worker.getMessageContext(sessionId, messageId, contextSize)
+    } catch (error) {
+      console.error('获取消息上下文失败：', error)
+      return []
+    }
+  })
+
+  /**
+   * 创建 AI 对话
+   */
+  ipcMain.handle('ai:createConversation', async (_, sessionId: string, title?: string) => {
+    try {
+      return aiConversations.createConversation(sessionId, title)
+    } catch (error) {
+      console.error('创建 AI 对话失败：', error)
+      throw error
+    }
+  })
+
+  /**
+   * 获取会话的所有 AI 对话列表
+   */
+  ipcMain.handle('ai:getConversations', async (_, sessionId: string) => {
+    try {
+      return aiConversations.getConversations(sessionId)
+    } catch (error) {
+      console.error('获取 AI 对话列表失败：', error)
+      return []
+    }
+  })
+
+  /**
+   * 获取单个 AI 对话
+   */
+  ipcMain.handle('ai:getConversation', async (_, conversationId: string) => {
+    try {
+      return aiConversations.getConversation(conversationId)
+    } catch (error) {
+      console.error('获取 AI 对话失败：', error)
+      return null
+    }
+  })
+
+  /**
+   * 更新 AI 对话标题
+   */
+  ipcMain.handle('ai:updateConversationTitle', async (_, conversationId: string, title: string) => {
+    try {
+      return aiConversations.updateConversationTitle(conversationId, title)
+    } catch (error) {
+      console.error('更新 AI 对话标题失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 删除 AI 对话
+   */
+  ipcMain.handle('ai:deleteConversation', async (_, conversationId: string) => {
+    try {
+      return aiConversations.deleteConversation(conversationId)
+    } catch (error) {
+      console.error('删除 AI 对话失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 添加 AI 消息
+   */
+  ipcMain.handle(
+    'ai:addMessage',
+    async (_, conversationId: string, role: 'user' | 'assistant', content: string, dataKeywords?: string[], dataMessageCount?: number) => {
+      try {
+        return aiConversations.addMessage(conversationId, role, content, dataKeywords, dataMessageCount)
+      } catch (error) {
+        console.error('添加 AI 消息失败：', error)
+        throw error
+      }
+    }
+  )
+
+  /**
+   * 获取 AI 对话的所有消息
+   */
+  ipcMain.handle('ai:getMessages', async (_, conversationId: string) => {
+    try {
+      return aiConversations.getMessages(conversationId)
+    } catch (error) {
+      console.error('获取 AI 消息失败：', error)
+      return []
+    }
+  })
+
+  /**
+   * 删除 AI 消息
+   */
+  ipcMain.handle('ai:deleteMessage', async (_, messageId: string) => {
+    try {
+      return aiConversations.deleteMessage(messageId)
+    } catch (error) {
+      console.error('删除 AI 消息失败：', error)
+      return false
+    }
+  })
+
+  // ==================== LLM 服务 ====================
+
+  /**
+   * 获取所有支持的 LLM 提供商
+   */
+  ipcMain.handle('llm:getProviders', async () => {
+    return llm.PROVIDERS
+  })
+
+  /**
+   * 获取当前 LLM 配置
+   */
+  ipcMain.handle('llm:getConfig', async () => {
+    const config = llm.loadLLMConfig()
+    if (!config) return null
+    // 不返回完整的 API Key，只返回脱敏版本
+    return {
+      provider: config.provider,
+      apiKey: config.apiKey ? `${config.apiKey.slice(0, 8)}...${config.apiKey.slice(-4)}` : '',
+      apiKeySet: !!config.apiKey,
+      model: config.model,
+      maxTokens: config.maxTokens,
+    }
+  })
+
+  /**
+   * 保存 LLM 配置
+   */
+  ipcMain.handle('llm:saveConfig', async (_, config: { provider: llm.LLMProvider; apiKey: string; model?: string; maxTokens?: number }) => {
+    try {
+      llm.saveLLMConfig(config)
+      return { success: true }
+    } catch (error) {
+      console.error('保存 LLM 配置失败：', error)
+      return { success: false, error: String(error) }
+    }
+  })
+
+  /**
+   * 删除 LLM 配置
+   */
+  ipcMain.handle('llm:deleteConfig', async () => {
+    try {
+      llm.deleteLLMConfig()
+      return true
+    } catch (error) {
+      console.error('删除 LLM 配置失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 验证 API Key
+   */
+  ipcMain.handle('llm:validateApiKey', async (_, provider: llm.LLMProvider, apiKey: string) => {
+    try {
+      return await llm.validateApiKey(provider, apiKey)
+    } catch (error) {
+      console.error('验证 API Key 失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 检查是否已配置 LLM
+   */
+  ipcMain.handle('llm:hasConfig', async () => {
+    return llm.hasLLMConfig()
+  })
+
+  /**
+   * 发送 LLM 聊天请求（非流式）
+   */
+  ipcMain.handle('llm:chat', async (_, messages: llm.ChatMessage[], options?: llm.ChatOptions) => {
+    aiLogger.info('IPC', '收到非流式 LLM 请求', {
+      messagesCount: messages.length,
+      firstMsgRole: messages[0]?.role,
+      firstMsgContentLen: messages[0]?.content?.length,
+      options,
+    })
+    try {
+      const response = await llm.chat(messages, options)
+      aiLogger.info('IPC', '非流式 LLM 请求成功', { responseLength: response.length })
+      return { success: true, content: response }
+    } catch (error) {
+      aiLogger.error('IPC', '非流式 LLM 请求失败', { error: String(error) })
+      console.error('LLM 聊天失败：', error)
+      return { success: false, error: String(error) }
+    }
+  })
+
+  /**
+   * 发送 LLM 聊天请求（流式）
+   * 使用 IPC 事件发送流式数据
+   */
+  ipcMain.handle('llm:chatStream', async (_, requestId: string, messages: llm.ChatMessage[], options?: llm.ChatOptions) => {
+    aiLogger.info('IPC', `收到流式聊天请求: ${requestId}`, {
+      messagesCount: messages.length,
+      options,
+    })
+
+    try {
+      const generator = llm.chatStream(messages, options)
+      aiLogger.info('IPC', `创建流式生成器: ${requestId}`)
+
+      // 异步处理流式响应
+      ;(async () => {
+        let chunkIndex = 0
+        try {
+          aiLogger.info('IPC', `开始迭代流式响应: ${requestId}`)
+          for await (const chunk of generator) {
+            chunkIndex++
+            aiLogger.debug('IPC', `发送 chunk #${chunkIndex}: ${requestId}`, {
+              contentLength: chunk.content?.length,
+              isFinished: chunk.isFinished,
+              finishReason: chunk.finishReason,
+            })
+            win.webContents.send('llm:streamChunk', { requestId, chunk })
+          }
+          aiLogger.info('IPC', `流式响应完成: ${requestId}`, { totalChunks: chunkIndex })
+        } catch (error) {
+          aiLogger.error('IPC', `流式响应出错: ${requestId}`, {
+            error: String(error),
+            chunkIndex,
+          })
+          win.webContents.send('llm:streamChunk', {
+            requestId,
+            chunk: { content: '', isFinished: true, finishReason: 'error' },
+            error: String(error),
+          })
+        }
+      })()
+
+      return { success: true }
+    } catch (error) {
+      aiLogger.error('IPC', `创建流式请求失败: ${requestId}`, { error: String(error) })
+      console.error('LLM 流式聊天失败：', error)
+      return { success: false, error: String(error) }
     }
   })
 }

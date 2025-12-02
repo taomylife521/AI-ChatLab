@@ -82,7 +82,7 @@ const memberRankData = computed<RankItem[]>(() => {
         >
           🏆 {{ seasonTitle }}
         </h1>
-        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">各榜单第一名请@群主领取奖品 🎁</p>
+        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">各榜单前三名请 @群主 领取奖品 🎁</p>
       </div>
 
       <!-- 龙王排名 -->
