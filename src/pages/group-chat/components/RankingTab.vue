@@ -29,7 +29,7 @@ const props = defineProps<{
 // 计算赛季标题
 const seasonTitle = computed(() => {
   if (props.selectedYear && props.selectedYear > 0) {
-    return `${props.selectedYear} 赛季群榜单`
+    return `${props.selectedYear} 赛季`
   }
   // 全部时间：显示年份范围
   if (props.availableYears && props.availableYears.length > 0) {
@@ -37,11 +37,11 @@ const seasonTitle = computed(() => {
     const minYear = sorted[0]
     const maxYear = sorted[sorted.length - 1]
     if (minYear === maxYear) {
-      return `${minYear} 赛季群榜单`
+      return `${minYear} 赛季`
     }
-    return `${minYear}-${maxYear} 赛季群榜单`
+    return `${minYear}-${maxYear} 赛季`
   }
-  return '全部赛季群榜单'
+  return '全部赛季'
 })
 
 // 锚点导航配置

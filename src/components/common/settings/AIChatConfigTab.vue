@@ -16,7 +16,7 @@ const emit = defineEmits<{
 const globalMaxMessages = computed({
   get: () => aiGlobalSettings.value.maxMessagesPerRequest,
   set: (val: number) => {
-    const clampedVal = Math.max(10, Math.min(5000, val || 200))
+    const clampedVal = Math.max(100, Math.min(5000, val || 100))
     promptStore.updateAIGlobalSettings({ maxMessagesPerRequest: clampedVal })
     emit('config-changed')
   },
@@ -36,7 +36,7 @@ const globalMaxMessages = computed({
           <div class="flex-1 pr-4">
             <p class="text-sm font-medium text-gray-900 dark:text-white">发送条数限制</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">
-              每次发送给 AI 的最大消息条数，用于控制上下文长度（10-5000）
+              每次发送给 AI 的最大消息条数，用于控制上下文长度（100-5000）
             </p>
           </div>
           <UInput v-model.number="globalMaxMessages" type="number" min="10" max="5000" class="w-24" />
