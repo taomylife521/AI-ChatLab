@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { NightOwlAnalysis } from '@/types/chat'
+import type { NightOwlAnalysis } from '@/types/analysis'
 import { RankListPro } from '@/components/charts'
 import { SectionCard } from '@/components/UI'
 

@@ -3,12 +3,12 @@
  * 负责各种数据分析查询
  */
 
+import type { MessageType } from '../../../src/types/base'
 import type {
   MemberActivity,
   HourlyActivity,
   DailyActivity,
   WeekdayActivity,
-  MessageType,
   RepeatAnalysis,
   RepeatStatItem,
   RepeatRateItem,
@@ -28,7 +28,7 @@ import type {
   MonologueAnalysis,
   MonologueRankItem,
   MaxComboRecord,
-} from '../../../src/types/chat'
+} from '../../../src/types/analysis'
 import { openDatabase } from './core'
 
 /**

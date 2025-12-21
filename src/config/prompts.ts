@@ -9,7 +9,7 @@
  * 主进程 (agent.ts) 的锁定部分逻辑需要独立维护，因为包含动态日期
  */
 
-import type { PromptPreset } from '@/types/chat'
+import type { PromptPreset } from '@/types/ai'
 
 // ==================== 预设 ID 常量 ====================
 

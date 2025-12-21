@@ -2,7 +2,7 @@
  * 聊天记录查看器类型定义
  */
 
-import type { ChatRecordQuery, ChatRecordMessage } from '@/types/chat'
+import type { ChatRecordQuery, ChatRecordMessage } from '@/types/format'
 
 // 重新导出类型
 export type { ChatRecordQuery, ChatRecordMessage }

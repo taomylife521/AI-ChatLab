@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { RepeatAnalysis } from '@/types/chat'
+import type { RepeatAnalysis } from '@/types/analysis'
 import { ListPro } from '@/components/charts'
 import { LoadingState, EmptyState, SectionCard } from '@/components/UI'
 import { formatDate, getRankBadgeClass } from '@/utils'

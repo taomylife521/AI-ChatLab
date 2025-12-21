@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { MemberNameHistory } from '@/types/chat'
+import type { MemberNameHistory } from '@/types/analysis'
 
 const props = defineProps<{
   history: MemberNameHistory[]

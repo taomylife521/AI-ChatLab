@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import type { PromptPreset } from '@/types/chat'
+import type { PromptPreset } from '@/types/ai'
 import AIPromptEditModal from './AIPromptEditModal.vue'
 import { usePromptStore } from '@/stores/prompt'
 

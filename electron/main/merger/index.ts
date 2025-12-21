@@ -17,16 +17,18 @@ import type {
   ChatLabMessage,
   FileParseInfo,
   MergeConflict,
+  ChatPlatform,
+  ChatType,
+  ParsedMember,
+} from '../../../src/types/base'
+import type {
   ConflictCheckResult,
   ConflictResolution,
   MergeParams,
   MergeResult,
-  ChatPlatform,
-  ChatType,
   MergeSource,
-  ParsedMeta,
-  ParsedMember,
-} from '../../../src/types/chat'
+} from '../../../src/types/format'
+import type { ParsedMeta } from '../parser/types'
 
 /**
  * 获取默认输出目录

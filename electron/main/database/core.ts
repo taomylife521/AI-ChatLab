@@ -7,7 +7,7 @@ import Database from 'better-sqlite3'
 import { app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
-import type { DbMeta, ParseResult, AnalysisSession } from '../../../src/types/chat'
+import type { DbMeta, ParseResult, AnalysisSession } from '../../../src/types/base'
 
 // 数据库存储目录
 let DB_DIR: string | null = null

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { PromptPreset } from '@/types/chat'
+import type { PromptPreset } from '@/types/ai'
 import {
   getDefaultRoleDefinition,
   getDefaultResponseRules,

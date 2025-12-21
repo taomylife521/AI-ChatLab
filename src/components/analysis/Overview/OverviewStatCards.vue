@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { StatCard } from '@/components/UI'
-import type { WeekdayActivity, DailyActivity, HourlyActivity } from '@/types/chat'
+import type { WeekdayActivity, DailyActivity, HourlyActivity } from '@/types/analysis'
 import dayjs from 'dayjs'
 
 defineProps<{

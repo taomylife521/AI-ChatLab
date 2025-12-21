@@ -18,7 +18,7 @@ import * as path from 'path'
 import { parser } from 'stream-json'
 import { streamArray } from 'stream-json/streamers/StreamArray'
 import { chain } from 'stream-chain'
-import { KNOWN_PLATFORMS, ChatType, MessageType } from '../../../../src/types/chat'
+import { KNOWN_PLATFORMS, ChatType, MessageType } from '../../../../src/types/base'
 import type {
   FormatFeature,
   FormatModule,

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { ChatRecordQuery } from '@/types/chat'
+import type { ChatRecordQuery } from '@/types/format'
 
 /**
  * 全局界面状态（侧边栏、弹窗、聊天记录抽屉等）

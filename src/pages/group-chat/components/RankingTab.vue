@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { MemberActivity } from '@/types/chat'
+import type { MemberActivity } from '@/types/analysis'
 import { RankListPro } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { PageAnchorsNav } from '@/components/UI'

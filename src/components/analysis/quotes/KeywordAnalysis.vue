@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { LaughAnalysis, KeywordTemplate as BaseKeywordTemplate } from '@/types/chat'
+import type { LaughAnalysis, KeywordTemplate as BaseKeywordTemplate } from '@/types/analysis'
 import { ListPro } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { LoadingState } from '@/components/UI'

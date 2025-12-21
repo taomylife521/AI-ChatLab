@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { DragonKingAnalysis } from '@/types/chat'
+import type { DragonKingAnalysis } from '@/types/analysis'
 import { RankListPro } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { LoadingState } from '@/components/UI'

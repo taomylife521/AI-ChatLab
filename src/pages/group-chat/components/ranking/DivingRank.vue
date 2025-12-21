@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { DivingAnalysis } from '@/types/chat'
+import type { DivingAnalysis } from '@/types/analysis'
 import { ListPro } from '@/components/charts'
 import { LoadingState } from '@/components/UI'
 import { formatFullDateTime, formatDaysSince, getRankBadgeClass } from '@/utils'

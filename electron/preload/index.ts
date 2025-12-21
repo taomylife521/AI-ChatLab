@@ -1,15 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { AnalysisSession, MessageType, ImportProgress } from '../../src/types/base'
 import type {
-  AnalysisSession,
   MemberActivity,
   MemberNameHistory,
   HourlyActivity,
   DailyActivity,
   WeekdayActivity,
   MonthlyActivity,
-  MessageType,
-  ImportProgress,
   RepeatAnalysis,
   CatchphraseAnalysis,
   NightOwlAnalysis,
@@ -20,12 +18,14 @@ import type {
   LaughAnalysis,
   CheckInAnalysis,
   MemeBattleAnalysis,
+  MemberWithStats,
+} from '../../src/types/analysis'
+import type {
   FileParseInfo,
   ConflictCheckResult,
   MergeParams,
   MergeResult,
-  MemberWithStats,
-} from '../../src/types/chat'
+} from '../../src/types/format'
 
 // Custom APIs for renderer
 const api = {

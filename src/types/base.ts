@@ -1,0 +1,226 @@
+/**
+ * ChatLab 基础类型定义
+ * 包含：枚举、数据库模型、Parser 解析结果
+ */
+
+// ==================== 枚举定义 ====================
+
+/**
+ * 消息类型枚举
+ *
+ * 分类说明：
+ * - 基础消息 (0-19): 常见的内容类型
+ * - 交互消息 (20-39): 涉及互动的消息类型
+ * - 系统消息 (80-89): 系统相关消息
+ * - 其他 (99): 未知或无法分类的消息
+ */
+export enum MessageType {
+  // ========== 基础消息类型 (0-19) ==========
+  TEXT = 0, // 文本消息
+  IMAGE = 1, // 图片
+  VOICE = 2, // 语音
+  VIDEO = 3, // 视频
+  FILE = 4, // 文件
+  EMOJI = 5, // 表情包/贴纸
+  LINK = 7, // 链接/卡片（分享的网页、文章等）
+  LOCATION = 8, // 位置/地理位置
+
+  // ========== 交互消息类型 (20-39) ==========
+  RED_PACKET = 20, // 红包
+  TRANSFER = 21, // 转账
+  POKE = 22, // 拍一拍/戳一戳
+  CALL = 23, // 语音/视频通话
+  SHARE = 24, // 分享（音乐、小程序等）
+  REPLY = 25, // 引用回复
+  FORWARD = 26, // 转发消息
+  CONTACT = 27, // 名片消息
+
+  // ========== 系统消息类型 (80-89) ==========
+  SYSTEM = 80, // 系统消息（入群/退群/群公告等）
+  RECALL = 81, // 撤回消息
+
+  // ========== 其他 (99) ==========
+  OTHER = 99, // 其他/未知
+}
+
+/**
+ * 消息类型名称映射
+ */
+export const MESSAGE_TYPE_NAMES: Record<number, string> = {
+  // 基础消息类型
+  [MessageType.TEXT]: '文字',
+  [MessageType.IMAGE]: '图片',
+  [MessageType.VOICE]: '语音',
+  [MessageType.VIDEO]: '视频',
+  [MessageType.FILE]: '文件',
+  [MessageType.EMOJI]: '表情',
+  [MessageType.LINK]: '链接',
+  [MessageType.LOCATION]: '位置',
+  // 交互消息类型
+  [MessageType.RED_PACKET]: '红包',
+  [MessageType.TRANSFER]: '转账',
+  [MessageType.POKE]: '拍一拍',
+  [MessageType.CALL]: '通话',
+  [MessageType.SHARE]: '分享',
+  [MessageType.REPLY]: '回复',
+  [MessageType.FORWARD]: '转发',
+  [MessageType.CONTACT]: '名片',
+  // 系统消息类型
+  [MessageType.SYSTEM]: '系统',
+  [MessageType.RECALL]: '撤回',
+  // 其他
+  [MessageType.OTHER]: '其他',
+}
+
+/**
+ * 获取消息类型名称
+ * @param type 消息类型
+ */
+export function getMessageTypeName(type: MessageType | number): string {
+  return MESSAGE_TYPE_NAMES[type] || '未知'
+}
+
+/**
+ * 聊天平台类型（字符串，允许任意值）
+ * 常见平台示例：qq, weixin, discord, whatsapp 等
+ * 合并多平台记录时使用 'mixed'
+ */
+export type ChatPlatform = string
+
+/**
+ * 预定义的常用平台值
+ */
+export const KNOWN_PLATFORMS = {
+  QQ: 'qq',
+  WECHAT: 'weixin',
+  DISCORD: 'discord',
+  WHATSAPP: 'whatsapp',
+  UNKNOWN: 'unknown',
+} as const
+
+/**
+ * 聊天类型枚举
+ */
+export enum ChatType {
+  GROUP = 'group', // 群聊
+  PRIVATE = 'private', // 私聊
+}
+
+// ==================== 数据库模型 ====================
+
+/**
+ * 元信息（数据库中存储的格式）
+ */
+export interface DbMeta {
+  name: string // 群名/对话名
+  platform: ChatPlatform // 平台
+  type: ChatType // 聊天类型
+  imported_at: number // 导入时间戳（秒）
+  group_id: string | null // 群ID（群聊类型有值，私聊为空）
+  group_avatar: string | null // 群头像（base64 Data URL）
+}
+
+/**
+ * 成员（数据库中存储的格式）
+ */
+export interface DbMember {
+  id: number // 自增ID
+  platform_id: string // 平台标识（QQ号等）
+  account_name: string | null // 账号名称（QQ原始昵称 sendNickName）
+  group_nickname: string | null // 群昵称（sendMemberName，可为空）
+  aliases: string // 用户自定义别名（JSON数组格式）
+  avatar: string | null // 头像（base64 Data URL）
+}
+
+/**
+ * 消息（数据库中存储的格式）
+ */
+export interface DbMessage {
+  id: number // 自增ID
+  sender_id: number // FK -> member.id
+  sender_account_name: string | null // 发送时的账号名称
+  sender_group_nickname: string | null // 发送时的群昵称
+  ts: number // 时间戳（秒）
+  type: MessageType // 消息类型
+  content: string | null // 纯文本内容
+}
+
+// ==================== Parser 解析结果 ====================
+
+/**
+ * 解析后的成员信息
+ */
+export interface ParsedMember {
+  platformId: string // 平台标识
+  accountName: string // 账号名称（QQ原始昵称 sendNickName）
+  groupNickname?: string // 群昵称（sendMemberName，可为空）
+  avatar?: string // 头像（base64 Data URL，可为空）
+}
+
+/**
+ * 解析后的消息
+ */
+export interface ParsedMessage {
+  senderPlatformId: string // 发送者平台ID
+  senderAccountName: string // 发送时的账号名称
+  senderGroupNickname?: string // 发送时的群昵称（可为空）
+  timestamp: number // 时间戳（秒）
+  type: MessageType // 消息类型
+  content: string | null // 内容
+}
+
+/**
+ * Parser 解析结果
+ */
+export interface ParseResult {
+  meta: {
+    name: string
+    platform: ChatPlatform
+    type: ChatType
+    groupId?: string // 群ID（群聊类型有值）
+    groupAvatar?: string // 群头像（base64 Data URL）
+  }
+  members: ParsedMember[]
+  messages: ParsedMessage[]
+}
+
+// ==================== 会话与 IPC 类型 ====================
+
+/**
+ * 分析会话信息（用于会话列表展示）
+ */
+export interface AnalysisSession {
+  id: string // 数据库文件名（不含扩展名）
+  name: string // 群名/对话名
+  platform: ChatPlatform
+  type: ChatType
+  importedAt: number // 导入时间戳
+  messageCount: number // 消息总数
+  memberCount: number // 成员数
+  dbPath: string // 数据库文件完整路径
+  groupId: string | null // 群ID（群聊类型有值，私聊为空）
+  groupAvatar: string | null // 群头像（base64 Data URL）
+}
+
+/**
+ * 导入进度回调
+ */
+export interface ImportProgress {
+  stage: 'detecting' | 'reading' | 'parsing' | 'saving' | 'done' | 'error'
+  progress: number // 0-100
+  message?: string
+  // 流式解析额外字段
+  bytesRead?: number
+  totalBytes?: number
+  messagesProcessed?: number
+}
+
+/**
+ * 导入结果
+ */
+export interface ImportResult {
+  success: boolean
+  sessionId?: string // 成功时返回会话ID
+  error?: string // 失败时返回错误信息
+}
+

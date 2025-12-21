@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import type { MemberWithStats, MemberNameHistory } from '@/types/chat'
+import type { MemberWithStats, MemberNameHistory } from '@/types/analysis'
 import { SectionCard, EmptyState, LoadingState } from '@/components/UI'
 import { formatPeriod } from '@/utils'
 

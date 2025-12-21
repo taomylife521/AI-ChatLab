@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { AnalysisSession, ImportProgress } from '@/types/chat'
+import type { AnalysisSession, ImportProgress } from '@/types/base'
 
 /**
  * 会话与导入相关的全局状态

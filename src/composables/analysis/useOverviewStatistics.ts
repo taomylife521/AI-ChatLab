@@ -1,5 +1,6 @@
 import { computed, type Ref } from 'vue'
-import type { AnalysisSession, HourlyActivity, DailyActivity, MessageType, WeekdayActivity } from '@/types/chat'
+import type { AnalysisSession, MessageType } from '@/types/base'
+import type { HourlyActivity, DailyActivity, WeekdayActivity } from '@/types/analysis'
 import dayjs from 'dayjs'
 
 interface UseOverviewStatisticsProps {

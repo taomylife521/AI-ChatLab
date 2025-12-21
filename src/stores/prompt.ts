@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { PromptPreset, KeywordTemplate, AIPromptSettings } from '@/types/chat'
+import type { PromptPreset, AIPromptSettings } from '@/types/ai'
+import type { KeywordTemplate } from '@/types/analysis'
 import {
   BUILTIN_PRESETS,
   DEFAULT_GROUP_PRESET_ID,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { CheckInAnalysis } from '@/types/chat'
+import type { CheckInAnalysis } from '@/types/analysis'
 import { RankListPro, ListPro } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { SectionCard, LoadingState, EmptyState } from '@/components/UI'

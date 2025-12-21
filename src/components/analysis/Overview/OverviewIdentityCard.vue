@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AnalysisSession } from '@/types/chat'
+import type { AnalysisSession } from '@/types/base'
 
 defineProps<{
   session: AnalysisSession

@@ -1,14 +1,12 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import type { AnalysisSession, MessageType, ImportProgress } from '../../src/types/base'
 import type {
-  AnalysisSession,
   MemberActivity,
   MemberNameHistory,
   HourlyActivity,
   DailyActivity,
   WeekdayActivity,
   MonthlyActivity,
-  MessageType,
-  ImportProgress,
   RepeatAnalysis,
   CatchphraseAnalysis,
   NightOwlAnalysis,
@@ -19,14 +17,15 @@ import type {
   LaughAnalysis,
   MemeBattleAnalysis,
   CheckInAnalysis,
+  MemberWithStats,
+} from '../../src/types/analysis'
+import type {
   FileParseInfo,
   ConflictCheckResult,
   MergeParams,
   MergeResult,
-  MemberWithStats,
-  TableSchema,
-  SQLResult,
-} from '../../src/types/chat'
+} from '../../src/types/format'
+import type { TableSchema, SQLResult } from '../../src/components/analysis/SQLLab/types'
 
 interface TimeFilter {
   startTs?: number

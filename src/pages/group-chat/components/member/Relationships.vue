@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { MentionAnalysis, MemberMentionDetail } from '@/types/chat'
+import type { MentionAnalysis, MemberMentionDetail } from '@/types/analysis'
 import { RankListPro } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { SectionCard, EmptyState, LoadingState } from '@/components/UI'

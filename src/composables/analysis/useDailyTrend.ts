@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import type { DailyActivity } from '@/types/chat'
+import type { DailyActivity } from '@/types/analysis'
 import type { LineChartData } from '@/components/charts'
 import dayjs from 'dayjs'
 

@@ -7,7 +7,8 @@ import Database from 'better-sqlite3'
 import * as fs from 'fs'
 import * as path from 'path'
 import { app } from 'electron'
-import type { ParseResult, ParsedMeta, ParsedMember, ParsedMessage } from '../../../src/types/chat'
+import type { ParsedMember, ParsedMessage } from '../../../src/types/base'
+import type { ParseResult, ParsedMeta } from '../parser/types'
 
 // 临时数据库目录
 let tempDir: string | null = null

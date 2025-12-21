@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import type { MemberWithStats } from '@/types/chat'
+import type { MemberWithStats } from '@/types/analysis'
 
 // Props
 const props = defineProps<{

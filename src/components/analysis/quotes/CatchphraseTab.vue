@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { CatchphraseAnalysis } from '@/types/chat'
+import type { CatchphraseAnalysis } from '@/types/analysis'
 import { ListPro } from '@/components/charts'
 import { SectionCard, EmptyState, LoadingState } from '@/components/UI'
 

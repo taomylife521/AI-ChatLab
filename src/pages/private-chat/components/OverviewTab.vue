@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import type { AnalysisSession, MessageType } from '@/types/base'
+import { getMessageTypeName } from '@/types/base'
 import type {
-  AnalysisSession,
   MemberActivity,
   HourlyActivity,
   DailyActivity,
-  MessageType,
   WeekdayActivity,
   MonthlyActivity,
-} from '@/types/chat'
-import { getMessageTypeName } from '@/types/chat'
+} from '@/types/analysis'
 import { DoughnutChart } from '@/components/charts'
 import type { DoughnutChartData } from '@/components/charts'
 import { SectionCard } from '@/components/UI'

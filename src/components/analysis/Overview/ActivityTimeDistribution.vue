@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { HourlyActivity, WeekdayActivity, MonthlyActivity } from '@/types/chat'
+import type { HourlyActivity, WeekdayActivity, MonthlyActivity } from '@/types/analysis'
 import { BarChart } from '@/components/charts'
 import type { BarChartData } from '@/components/charts'
 import { SectionCard } from '@/components/UI'

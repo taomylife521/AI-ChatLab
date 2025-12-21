@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { MemeBattleAnalysis } from '@/types/chat'
+import type { MemeBattleAnalysis } from '@/types/analysis'
 import { RankListPro, ListPro } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { LoadingState, Tabs } from '@/components/UI'

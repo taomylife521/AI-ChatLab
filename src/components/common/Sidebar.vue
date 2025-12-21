@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import type { AnalysisSession } from '@/types/chat'
+import type { AnalysisSession } from '@/types/base'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
