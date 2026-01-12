@@ -180,14 +180,46 @@ function setSchemaVersion(db: Database.Database, version: number): void {
 }
 
 /**
+ * 检查数据库结构是否完整（meta 表必须存在）
+ * 如果 meta 表不存在，说明数据库损坏或不完整
+ */
+function checkDatabaseIntegrity(db: Database.Database): { valid: boolean; error?: string } {
+  try {
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='meta'").all() as Array<{
+      name: string
+    }>
+
+    if (tables.length === 0) {
+      return {
+        valid: false,
+        error: '数据库结构不完整：缺少 meta 表。建议删除此数据库文件后重新导入。',
+      }
+    }
+    return { valid: true }
+  } catch (error) {
+    return {
+      valid: false,
+      error: `数据库检查失败: ${error instanceof Error ? error.message : String(error)}`,
+    }
+  }
+}
+
+/**
  * 执行数据库迁移
  * 自动检测当前版本并执行所有需要的迁移
  *
  * @param db 数据库连接
  * @param forceRepair 是否强制修复（即使版本号已是最新也重新执行迁移脚本）
  * @returns 是否执行了迁移
+ * @throws 如果数据库结构不完整
  */
 export function migrateDatabase(db: Database.Database, forceRepair = false): boolean {
+  // 首先检查数据库结构完整性
+  const integrity = checkDatabaseIntegrity(db)
+  if (!integrity.valid) {
+    throw new Error(integrity.error)
+  }
+
   const currentVersion = getSchemaVersion(db)
 
   // 如果不是强制修复模式，检查版本号

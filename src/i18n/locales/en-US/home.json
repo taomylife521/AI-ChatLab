@@ -45,6 +45,10 @@
     "upgradeContent": "Upgrade content:",
     "upgradeNow": "Upgrade Now",
     "upgrading": "Upgrading...",
-    "failed": "Migration failed"
+    "failed": "Migration failed",
+    "partialFailed": "Some databases failed to upgrade",
+    "errorHint": "This is usually caused by corrupted database files. Please delete the failed sessions from the sidebar and re-import them.",
+    "close": "Close",
+    "retry": "Retry"
   }
 }

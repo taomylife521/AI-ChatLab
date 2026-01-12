@@ -45,6 +45,10 @@
     "upgradeContent": "本次升级内容：",
     "upgradeNow": "立即升级",
     "upgrading": "正在升级...",
-    "failed": "迁移失败"
+    "failed": "迁移失败",
+    "partialFailed": "部分数据库升级失败",
+    "errorHint": "这通常是因为数据库文件损坏。建议在侧边栏中删除失败的会话，然后重新导入。",
+    "close": "关闭",
+    "retry": "重试"
   }
 }

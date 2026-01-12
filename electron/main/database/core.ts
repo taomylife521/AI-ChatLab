@@ -451,18 +451,33 @@ export function checkMigrationNeeded(): {
 }
 
 /**
- * 执行所有数据库的迁移
- * @returns 迁移结果
+ * 迁移失败的数据库信息
  */
-export function migrateAllDatabases(): { success: boolean; migratedCount: number; error?: string } {
+interface MigrationFailure {
+  sessionId: string
+  error: string
+}
+
+/**
+ * 执行所有数据库的迁移
+ * 即使部分数据库迁移失败，也会继续处理其他数据库
+ * @returns 迁移结果，包含成功数量和失败列表
+ */
+export function migrateAllDatabases(): {
+  success: boolean
+  migratedCount: number
+  failures: MigrationFailure[]
+  error?: string
+} {
   const { sessionIds, forceRepairIds } = checkMigrationNeeded()
   const forceRepairSet = new Set(forceRepairIds)
 
   if (sessionIds.length === 0) {
-    return { success: true, migratedCount: 0 }
+    return { success: true, migratedCount: 0, failures: [] }
   }
 
   let migratedCount = 0
+  const failures: MigrationFailure[] = []
 
   for (const sessionId of sessionIds) {
     try {
@@ -473,14 +488,22 @@ export function migrateAllDatabases(): { success: boolean; migratedCount: number
         migratedCount++
       }
     } catch (error) {
-      console.error(`[Database] Failed to migrate ${sessionId}:`, error)
-      return {
-        success: false,
-        migratedCount,
-        error: `迁移 ${sessionId} 失败: ${error instanceof Error ? error.message : String(error)}`,
-      }
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error(`[Database] Failed to migrate ${sessionId}:`, errorMessage)
+      failures.push({ sessionId, error: errorMessage })
     }
   }
 
-  return { success: true, migratedCount }
+  // 如果有失败的数据库，返回部分成功状态
+  if (failures.length > 0) {
+    const failedIds = failures.map((f) => f.sessionId.split('_').slice(-1)[0]).join(', ')
+    return {
+      success: false,
+      migratedCount,
+      failures,
+      error: `${failures.length} 个数据库迁移失败（ID: ${failedIds}）。建议在侧边栏中删除这些损坏的会话。`,
+    }
+  }
+
+  return { success: true, migratedCount, failures: [] }
 }
