@@ -8,7 +8,7 @@ import type { IpcContext } from './ipc/types'
 // 导入各功能模块
 import { registerWindowHandlers } from './ipc/window'
 import { registerChatHandlers } from './ipc/chat'
-import { registerMergeHandlers, initMergeModule } from './ipc/merge'
+import { registerMergeHandlers, initMergeModule, cleanupTempDbs } from './ipc/merge'
 import { registerAIHandlers } from './ipc/ai'
 import { registerMessagesHandlers } from './ipc/messages'
 import { registerCacheHandlers } from './ipc/cache'
@@ -48,6 +48,18 @@ const mainIpcMain = (win: BrowserWindow) => {
   registerAnalyticsHandlers()
 
   console.log('[IpcMain] All IPC handlers registered successfully')
+}
+
+export const cleanup = () => {
+  console.log('[IpcMain] Cleaning up resources...')
+  try {
+    // 关闭 Worker
+    worker.closeWorker()
+    // 清理临时数据库
+    cleanupTempDbs()
+  } catch (error) {
+    console.error('[IpcMain] Error during cleanup:', error)
+  }
 }
 
 export default mainIpcMain

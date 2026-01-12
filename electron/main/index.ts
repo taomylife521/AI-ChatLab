@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, protocol, nativeTheme } from 'electron'
 import { join } from 'path'
 import { optimizer, is, platform } from '@electron-toolkit/utils'
 import { checkUpdate } from './update'
-import mainIpcMain from './ipcMain'
+import mainIpcMain, { cleanup } from './ipcMain'
 import { initAnalytics, trackDailyActive } from './analytics'
 import { initProxy } from './network/proxy'
 import { needsLegacyMigration, migrateFromLegacyDir, ensureAppDirs } from './paths'
@@ -206,6 +206,11 @@ class MainProcess {
       app.on('before-quit', () => {
         // @ts-ignore
         app.isQuiting = true
+      })
+
+      // 退出前清理资源
+      app.on('will-quit', () => {
+        cleanup()
       })
     })
   }
