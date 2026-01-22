@@ -170,6 +170,47 @@ export const aiLogger = {
   },
 }
 
+/**
+ * 从 Error 对象中提取错误信息（不含堆栈）
+ * @param error 任意错误对象
+ */
+export function extractErrorInfo(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    const info: Record<string, unknown> = {
+      name: error.name,
+      message: error.message,
+    }
+
+    // 如果有 cause，递归提取
+    if ('cause' in error && error.cause) {
+      info.cause = extractErrorInfo(error.cause)
+    }
+
+    return info
+  }
+
+  // 非 Error 对象，尝试转换
+  if (typeof error === 'object' && error !== null) {
+    return { raw: JSON.stringify(error) }
+  }
+
+  return { message: String(error) }
+}
+
+/**
+ * 从 Error 对象中提取堆栈信息（用于单独一行日志）
+ * @param error 任意错误对象
+ * @param stackLines 保留的堆栈行数（默认 5）
+ */
+export function extractErrorStack(error: unknown, stackLines: number = 5): string | null {
+  if (error instanceof Error && error.stack) {
+    const lines = error.stack.split('\n')
+    // 跳过第一行（错误消息），保留后续 N 行堆栈
+    return lines.slice(1, stackLines + 1).join('\n')
+  }
+  return null
+}
+
 // 导出便捷函数
 export function logAI(message: string, data?: any) {
   aiLogger.info('AI', message, data)

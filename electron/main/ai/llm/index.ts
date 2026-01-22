@@ -21,7 +21,7 @@ import type {
 import { MAX_CONFIG_COUNT } from './types'
 import { GeminiService, GEMINI_INFO } from './gemini'
 import { OpenAICompatibleService, OPENAI_COMPATIBLE_INFO } from './openai-compatible'
-import { aiLogger } from '../logger'
+import { aiLogger, extractErrorInfo, extractErrorStack } from '../logger'
 
 // 导出类型
 export * from './types'
@@ -467,10 +467,20 @@ export async function chat(
   messages: ChatMessage[],
   options?: ChatOptions
 ): Promise<{ content: string; finishReason: string; tool_calls?: import('./types').ToolCall[] }> {
+  const activeConfig = getActiveConfig()
+
   aiLogger.info('LLM', '开始非流式聊天请求', {
     messagesCount: messages.length,
     firstMessageRole: messages[0]?.role,
     firstMessageLength: messages[0]?.content?.length,
+    config: activeConfig
+      ? {
+          name: activeConfig.name,
+          provider: activeConfig.provider,
+          model: activeConfig.model,
+          baseUrl: activeConfig.baseUrl,
+        }
+      : null,
     options,
   })
 
@@ -479,8 +489,6 @@ export async function chat(
     aiLogger.error('LLM', '服务未配置')
     throw new Error('LLM 服务未配置，请先在设置中配置 API Key')
   }
-
-  aiLogger.info('LLM', `使用提供商: ${service.getProvider()}`)
 
   try {
     const response = await service.chat(messages, options)
@@ -491,7 +499,22 @@ export async function chat(
     })
     return response
   } catch (error) {
-    aiLogger.error('LLM', '非流式请求失败', { error: String(error) })
+    // 配置信息
+    const configStr = activeConfig
+      ? `${activeConfig.name} (${activeConfig.provider}/${activeConfig.model}) baseUrl=${activeConfig.baseUrl || '默认'}`
+      : '未配置'
+    // 错误信息
+    const errorInfo = extractErrorInfo(error)
+    const errorStr = `${errorInfo.name || 'Error'}: ${errorInfo.message}`
+
+    aiLogger.error('LLM', `非流式请求失败 | 配置: ${configStr}`)
+    aiLogger.error('LLM', `错误: ${errorStr}`)
+
+    // 堆栈单独一行
+    const stack = extractErrorStack(error)
+    if (stack) {
+      aiLogger.error('LLM', `堆栈:\n${stack}`)
+    }
     throw error
   }
 }
@@ -500,10 +523,20 @@ export async function chat(
  * 发送聊天请求（流式，使用当前配置）
  */
 export async function* chatStream(messages: ChatMessage[], options?: ChatOptions): AsyncGenerator<ChatStreamChunk> {
+  const activeConfig = getActiveConfig()
+
   aiLogger.info('LLM', '开始流式聊天请求', {
     messagesCount: messages.length,
     firstMessageRole: messages[0]?.role,
     firstMessageLength: messages[0]?.content?.length,
+    config: activeConfig
+      ? {
+          name: activeConfig.name,
+          provider: activeConfig.provider,
+          model: activeConfig.model,
+          baseUrl: activeConfig.baseUrl,
+        }
+      : null,
   })
 
   const service = getCurrentLLMService()
@@ -511,8 +544,6 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
     aiLogger.error('LLM', '服务未配置（流式）')
     throw new Error('LLM 服务未配置，请先在设置中配置 API Key')
   }
-
-  aiLogger.info('LLM', `使用提供商（流式）: ${service.getProvider()}`)
 
   let chunkCount = 0
   let totalContent = ''
@@ -551,10 +582,22 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
       })
     }
   } catch (error) {
-    aiLogger.error('LLM', '流式请求失败', {
-      error: String(error),
-      chunkCountBeforeError: chunkCount,
-    })
+    // 配置信息
+    const configStr = activeConfig
+      ? `${activeConfig.name} (${activeConfig.provider}/${activeConfig.model}) baseUrl=${activeConfig.baseUrl || '默认'}`
+      : '未配置'
+    // 错误信息
+    const errorInfo = extractErrorInfo(error)
+    const errorStr = `${errorInfo.name || 'Error'}: ${errorInfo.message}`
+
+    aiLogger.error('LLM', `流式请求失败 | 配置: ${configStr} | 已接收: ${chunkCount}块/${totalContent.length}字符`)
+    aiLogger.error('LLM', `错误: ${errorStr}`)
+
+    // 堆栈单独一行
+    const stack = extractErrorStack(error)
+    if (stack) {
+      aiLogger.error('LLM', `堆栈:\n${stack}`)
+    }
     throw error
   }
 }
