@@ -5,9 +5,8 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import type { AnalysisSession, MessageType } from '@/types/base'
 import type { MemberActivity, HourlyActivity, DailyActivity } from '@/types/analysis'
-import { formatDateRange } from '@/utils'
 import CaptureButton from '@/components/common/CaptureButton.vue'
-import UITabs from '@/components/UI/Tabs.vue'
+import TimeSelect from '@/components/common/TimeSelect.vue'
 import AITab from '@/components/analysis/AITab.vue'
 import OverviewTab from './components/OverviewTab.vue'
 import ViewTab from './components/ViewTab.vue'
@@ -19,6 +18,7 @@ import IncrementalImportModal from '@/components/analysis/IncrementalImportModal
 import LoadingState from '@/components/UI/LoadingState.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
+import { useTimeSelect } from '@/composables'
 
 const { t } = useI18n()
 
@@ -46,12 +46,7 @@ const memberActivity = ref<MemberActivity[]>([])
 const hourlyActivity = ref<HourlyActivity[]>([])
 const dailyActivity = ref<DailyActivity[]>([])
 const messageTypes = ref<Array<{ type: MessageType; count: number }>>([])
-const timeRange = ref<{ start: number; end: number } | null>(null)
-
-// 年份筛选
-const availableYears = ref<number[]>([])
-const selectedYear = ref<number>(0) // 0 表示全部
-const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发，并控制首屏加载状态
+const isInitialLoad = ref(true)
 
 // Tab 配置 - 私聊有总览、视图、语录、成员、AI实验室
 const tabs = [
@@ -64,27 +59,20 @@ const tabs = [
 
 const activeTab = ref((route.query.tab as string) || 'overview')
 
-// 计算时间过滤参数
-const timeFilter = computed(() => {
-  if (selectedYear.value === 0) {
-    return undefined
-  }
-  // 计算年份的开始和结束时间戳
-  const startDate = new Date(selectedYear.value, 0, 1, 0, 0, 0)
-  const endDate = new Date(selectedYear.value, 11, 31, 23, 59, 59)
-  return {
-    startTs: Math.floor(startDate.getTime() / 1000),
-    endTs: Math.floor(endDate.getTime() / 1000),
-  }
-})
-
-// 年份选项
-const yearOptions = computed(() => {
-  const options = [{ label: t('analysis.yearFilter.allTime'), value: 0 }]
-  for (const year of availableYears.value) {
-    options.push({ label: t('analysis.yearFilter.year', { year }), value: year })
-  }
-  return options
+// 时间范围筛选（composable 统一管理状态、派生计算、URL 同步）
+const {
+  timeRangeValue,
+  fullTimeRange,
+  timeFilter,
+  timeFilterKey,
+  selectedYearForOverview,
+  initialTimeState,
+  resetTimeRange,
+} = useTimeSelect(route, router, {
+  activeTab,
+  isInitialLoad,
+  currentSessionId,
+  onTimeRangeChange: () => loadAnalysisData(),
 })
 
 // 当前筛选后的消息总数
@@ -95,15 +83,6 @@ const filteredMessageCount = computed(() => {
 // 当前筛选后的活跃成员数
 const filteredMemberCount = computed(() => {
   return memberActivity.value.filter((m) => m.messageCount > 0).length
-})
-
-// 格式化时间范围显示
-const dateRangeText = computed(() => {
-  if (selectedYear.value) {
-    return t('analysis.yearFilter.year', { year: selectedYear.value })
-  }
-  if (!timeRange.value) return ''
-  return formatDateRange(timeRange.value.start, timeRange.value.end)
 })
 
 // Sync route param to store
@@ -118,36 +97,19 @@ function syncSession() {
   }
 }
 
-// 加载基础数据（不受年份筛选影响）
+// 加载基础数据（仅会话信息，时间范围由 TimeSelect 内部拉取）
 async function loadBaseData() {
   if (!currentSessionId.value) return
 
   try {
-    const [sessionData, years, range] = await Promise.all([
-      window.chatApi.getSession(currentSessionId.value),
-      window.chatApi.getAvailableYears(currentSessionId.value),
-      window.chatApi.getTimeRange(currentSessionId.value),
-    ])
-
+    const sessionData = await window.chatApi.getSession(currentSessionId.value)
     session.value = sessionData
-    availableYears.value = years
-    timeRange.value = range
-
-    // 初始化年份选择
-    const queryYear = Number(route.query.year)
-    if (queryYear === 0 || (queryYear && years.includes(queryYear))) {
-      selectedYear.value = queryYear
-    } else if (years.length > 0) {
-      selectedYear.value = years[0]
-    } else {
-      selectedYear.value = 0
-    }
   } catch (error) {
     console.error('加载基础数据失败:', error)
   }
 }
 
-// 加载分析数据（受年份筛选影响）
+// 加载分析数据（受时间范围筛选影响）
 async function loadAnalysisData() {
   if (!currentSessionId.value) return
 
@@ -176,12 +138,10 @@ async function loadAnalysisData() {
 
 // 加载所有数据
 async function loadData() {
-  // 如果没有会话 ID，保持 loading 状态，等待 syncSession 设置后再触发
   if (!currentSessionId.value) return
 
   isInitialLoad.value = true
   await loadBaseData()
-  await loadAnalysisData()
   isInitialLoad.value = false
 }
 
@@ -198,33 +158,17 @@ watch(
   }
 )
 
-// 监听会话变化
+// 监听会话变化（切换会话时清空时间范围，等待 TimeSelect 重新拉取）
 watch(
   currentSessionId,
-  () => {
+  (newId, oldId) => {
+    if (oldId !== undefined && newId !== oldId) {
+      resetTimeRange()
+    }
     loadData()
   },
   { immediate: true }
 )
-
-// 监听年份筛选变化
-watch(selectedYear, () => {
-  if (isInitialLoad.value) return
-  loadAnalysisData()
-})
-
-// 同步状态到 URL
-watch([activeTab, selectedYear], ([newTab, newYear]) => {
-  if (isInitialLoad.value) return
-
-  router.replace({
-    query: {
-      ...route.query,
-      tab: newTab,
-      year: newYear,
-    },
-  })
-})
 
 // 获取对方头像
 const otherMemberAvatar = computed(() => {
@@ -267,8 +211,9 @@ onMounted(() => {
         :title="session.name"
         :description="
           t('analysis.privateChat.description', {
-            dateRange: dateRangeText,
-            messageCount: selectedYear ? filteredMessageCount : session.messageCount,
+            dateRange: timeRangeValue?.displayLabel ?? '',
+            messageCount:
+              timeRangeValue?.isFullRange !== false ? session.messageCount : filteredMessageCount,
           })
         "
         :avatar="otherMemberAvatar"
@@ -323,13 +268,13 @@ onMounted(() => {
               <span class="whitespace-nowrap">{{ t(tab.labelKey) }}</span>
             </button>
           </div>
-          <!-- 年份选择器靠右（AI实验室时隐藏） -->
-          <UITabs
-            v-if="activeTab !== 'ai'"
-            v-model="selectedYear"
-            :items="yearOptions"
-            size="sm"
-            class="min-w-0 shrink"
+          <!-- 时间范围选择器靠右（AI实验室时隐藏） -->
+          <TimeSelect
+            v-model="timeRangeValue"
+            :session-id="currentSessionId ?? undefined"
+            :visible="activeTab !== 'ai'"
+            :initial-state="initialTimeState"
+            @update:full-range="fullTimeRange = $event"
           />
         </div>
       </PageHeader>
@@ -343,27 +288,27 @@ onMounted(() => {
           <Transition name="tab-slide" mode="out-in">
             <OverviewTab
               v-if="activeTab === 'overview'"
-              :key="'overview-' + selectedYear"
+              :key="'overview-' + timeFilterKey"
               :session="session"
               :member-activity="memberActivity"
               :message-types="messageTypes"
               :hourly-activity="hourlyActivity"
               :daily-activity="dailyActivity"
-              :time-range="timeRange"
-              :selected-year="selectedYear"
+              :time-range="fullTimeRange"
+              :selected-year="selectedYearForOverview"
               :filtered-message-count="filteredMessageCount"
               :filtered-member-count="filteredMemberCount"
               :time-filter="timeFilter"
             />
             <ViewTab
               v-else-if="activeTab === 'view'"
-              :key="'view-' + selectedYear"
+              :key="'view-' + timeFilterKey"
               :session-id="currentSessionId!"
               :time-filter="timeFilter"
             />
             <QuotesTab
               v-else-if="activeTab === 'quotes'"
-              :key="'quotes-' + selectedYear"
+              :key="'quotes-' + timeFilterKey"
               :session-id="currentSessionId!"
               :time-filter="timeFilter"
             />
