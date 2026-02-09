@@ -490,17 +490,13 @@ export function getAllSessions(): any[] {
       db.pragma('journal_mode = WAL')
 
       // 跳过非聊天会话数据库（例如内部索引库）
-      const hasChatMeta = db
-        .prepare("SELECT 1 as ok FROM sqlite_master WHERE type='table' AND name='meta' LIMIT 1")
-        .get() as { ok: number } | undefined
-      const hasMemberTable = db
-        .prepare("SELECT 1 as ok FROM sqlite_master WHERE type='table' AND name='member' LIMIT 1")
-        .get() as { ok: number } | undefined
-      const hasMessageTable = db
-        .prepare("SELECT 1 as ok FROM sqlite_master WHERE type='table' AND name='message' LIMIT 1")
-        .get() as { ok: number } | undefined
+      const requiredTableCount = db
+        .prepare(
+          "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name IN ('meta', 'member', 'message')"
+        )
+        .get() as { cnt: number }
 
-      if (!hasChatMeta || !hasMemberTable || !hasMessageTable) {
+      if (requiredTableCount.cnt !== 3) {
         db.close()
         continue
       }
